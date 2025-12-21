@@ -1,4 +1,4 @@
-# 🎬 Movie Recommender System
+# 🎬 Movie Content Similarity System
 
 A content-based **Movie Recommendation System** built using **Flask** and **Sentence Transformers** that suggests similar movies based on user input.  
 It also keeps track of recent searches using **SQLite** and displays them dynamically on the results page.
