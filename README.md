@@ -1,11 +1,11 @@
-# 🎬 Movie Content Similarity System
+# Movie Content Similarity System
 
 A content-based **Movie Recommendation System** built using **Flask** and **Sentence Transformers** that suggests similar movies based on user input.  
 It also keeps track of recent searches using **SQLite** and displays them dynamically on the results page.
 
 ---
 
-## 🚀 Features
+## Features
 
 - Search any movie and get top 5 similar recommendations instantly.  
 - Displays recent search history with timestamps.  
@@ -14,7 +14,7 @@ It also keeps track of recent searches using **SQLite** and displays them dynami
 
 ---
 
-## 🧩 Tech Stack
+## Tech Stack
 
 **Backend:** Python, Flask, SQLite  
 **ML/NLP:** SentenceTransformers (`all-MiniLM-L6-v2`), Scikit-learn (cosine similarity)  
@@ -32,7 +32,7 @@ Results and recent searches are rendered dynamically via Flask and Jinja templat
 
 ---
 
-## 🗂️ Database
+## Database
 
 The app uses SQLite (app/search_history.db) to store recent searches:
 
@@ -52,4 +52,4 @@ python main.py
 
 # Access the web app
 
-Go to: 👉 http://127.0.0.1:5000/search
+Go to: http://127.0.0.1:5000/search
