@@ -6,7 +6,6 @@ __pycache__/
 venv/
 
 # Data files
-*.npy
 *.db
 
 # OS files
