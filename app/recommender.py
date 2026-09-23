@@ -5,7 +5,7 @@ import re
 import os
 import numpy as np   # bcoz embeddings are stored in numpy arrays
 from sklearn.metrics.pairwise import cosine_similarity
-from sentence_transformers import SentenceTransformer   # sentence-transformer (a huggingface library) imports a model to get the semantic embeddings of text data
+from sentence_transformers import SentenceTransformer   # sentence-transformer is a pre-trained model that converts text into embeddings (dense vector representations); it is pretrained on a large corpus of text and can capture semantic meaning of sentences
 import time
 
 class MovieRecommender:
@@ -64,6 +64,7 @@ class MovieRecommender:
 # self.model.encode(list_of_strings): feeds that list into the transformer model and returns a 2D numpy array
 # encode() is a method of the SentenceTransformer model that takes a list of strings and converts each string into a fixed-size vector ie. embedding (numeric) that captures its semantic meaning; the output is a 2D array where each row corresponds to the embedding of a movie's combined features text         
 # self.movie_embeddings shape = (no of rows in the dataset, 384 [embedding size of the model]) ie. (10000, 384); Each row = a vector (list of 384 float nos) that encodes the "meaning" of that movie’s combined_features text; The model all-MiniLM-L6-v2 produces 384-dimensional embeddings 
+# the embeddings look like this: [[0.123, 0.456, ...], [0.789, 0.012, ...], ...] where each inner list is a 384-dimensional vector representing a movie's combined features 
 # The idea is that movies with similar combined features will have similar embeddings (vectors that are close in the 384-dimensional space), which allows us to compute similarity between movies using cosine similarity
               
             np.save(embedding_file, self.movie_embeddings)   # saves the computed embeddings to the .npy file for future use
@@ -73,7 +74,8 @@ class MovieRecommender:
 
         self.cosine_sim = cosine_similarity(self.movie_embeddings)   # precomputes cosine similarity between all pairs of movie embeddings
 # self.cosine_sim[i][j] means: Similarity between movie i and movie j
-# why cosine sim? Because it measures the cosine of the angle between two vectors in a multi-dimensional space, which is a common way to measure similarity between text embeddings; it ranges from -1 (completely dissimilar) to 1 (identical), with 0 indicating orthogonality (no similarity); it is effective for high-dimensional data like text embeddings because it focuses on the direction of the vectors rather than their magnitude, making it less sensitive to differences in length and more focused on the semantic content captured by the embeddings
+# why cosine sim? Because it measures the cosine of the angle between two vectors in a multi-dimensional space, which is a common way to measure similarity between text embeddings; it ranges from -1 (completely dissimilar) to 1 (identical), with 0 indicating no similarity
+# so here, cosine_sim[embedding_i][embedding_j] gives a similarity score between movie i and movie j based on their embeddings
 
         end_time = time.time()   # end timer
         print(f"Startup time: {end_time - start_time:.2f} seconds")    
