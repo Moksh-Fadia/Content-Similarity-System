@@ -1,69 +1,134 @@
 # Movie Content Similarity System
 
-A content-based **Movie Recommendation System** built using **Flask** and **Sentence Transformers** that suggests similar movies based on user input.  
-It also keeps track of recent searches using **SQLite** and displays them dynamically on the results page.
+A content-based **Movie Recommendation System** built using **Flask** and **Sentence Transformers** that recommends similar movies based on semantic similarity.
+
+The system uses movie metadata such as overview, genre, cast, and title to generate semantic embeddings and uses cosine similarity to identify similar movies.
+
+It also stores recent searches using **SQLite** and displays them dynamically on the results page.
 
 ---
 
 ## Features
 
-- Search any movie and get top 5 similar recommendations instantly.  
-- Displays recent search history with timestamps.  
-- Simple and clean web interface using Flask + HTML/CSS.  
+- Search for a movie and receive the top 5 similar recommendations.
+- Semantic similarity using SentenceTransformer embeddings.
+- Uses movie overview, genre, cast, and title as recommendation features.
+- Genre and cast are given additional weight during feature construction.
+- Recent search history stored using SQLite.
+- Dynamic results rendered using Flask and Jinja2.
+- Deployed publicly using Gunicorn and Render.
 
 ---
 
 ## Performance Optimization
 
-- Reduced application startup time by precomputing and caching sentence embeddings using NumPy.
-- Improved startup from ~63 seconds to ~0.24 seconds (~99.6% reduction) by avoiding repeated model inference.
-- Ensures instant server readiness after initial setup.
+### Persistent Movie Embeddings
 
----
+Generating SentenceTransformer embeddings for the entire movie dataset during every application startup was expensive.
 
-## Performance Measurement
+To avoid repeated model inference:
 
-- Measured end-to-end request latency including database operations, recommendation logic, and template rendering.
-- Achieved an average response time of ~15 ms per request during local testing.
+- Movie embeddings are generated once.
+- The embeddings are persisted as `data/movie_embeddings.npy`.
+- Subsequent startups load the precomputed embeddings using NumPy.
 
----
+This reduced the measured embedding preparation/startup step from approximately **63 seconds to 0.24 seconds**.
 
-## Tech Stack
+### Memory Optimization
 
-**Backend:** Python, Flask, SQLite  
-**ML/NLP:** SentenceTransformers (`all-MiniLM-L6-v2`), Scikit-learn (cosine similarity)  
-**Frontend:** HTML, CSS, Jinja2 Templates  
-**Libraries:** Pandas, NumPy  
+The initial implementation precomputed a full pairwise cosine similarity matrix for all movies.
 
----
+For approximately 10,000 movies, this required a 10,000 × 10,000 similarity matrix containing approximately 100 million similarity values.
 
-## How It Works
+This caused the application to exceed Render's 512 MiB memory limit.
 
-User enters a movie name in the search box.
-The system encodes the movie’s combined metadata (overview, genre, cast) using the SentenceTransformer model.
-It calculates cosine similarity between movies to find the most semantically similar ones.
-Results and recent searches are rendered dynamically via Flask and Jinja templates.
+The final implementation avoids storing this full matrix.
 
----
+Instead, cosine similarity is calculated on demand between the selected movie's embedding and all movie embeddings. This significantly reduces memory usage while preserving the recommendation logic.
 
-## Database
 
-The app uses SQLite (app/search_history.db) to store recent searches:
+### Performance Measurement
 
-id (auto-increment primary key)
-title (searched movie name)
-timestamp (search time)
+End-to-end request latency was measured locally, including:
 
----
+- Input validation
+- SQLite database operations
+- Recommendation computation
+- Similarity ranking
+- Genre filtering
+- Recent search retrieval
+- Jinja template rendering
 
-# Install dependencies
+Across 17 local test requests:
+
+- Average response time: ~14 ms
+- Median response time: ~4.3 ms
+
+### Tech Stack
+
+- Backend:
+Python, Flask, Gunicorn, SQLite
+
+- ML / NLP:
+SentenceTransformers (all-MiniLM-L6-v2), Scikit-learn
+
+- Data Processing:
+Pandas, NumPy
+
+- Frontend:
+HTML, CSS, Jinja2
+
+- Deployment:
+Render
+
+
+### How It Works
+
+1) The user enters a movie title through the Flask web interface.
+2) Movie metadata is cleaned and combined from:
+Overview, Genre,
+Cast,
+Movie title
+
+3) Genre information is given 3x weight and cast information 2x weight when constructing the combined text representation.
+4) The combined movie metadata is converted into a 384-dimensional semantic embedding using:
+all-MiniLM-L6-v2
+5) When a user searches for a movie, the system calculates cosine similarity between the selected movie's embedding and all stored movie embeddings.
+6) Similarity scores are sorted in descending order and the top 5 recommendations are returned.
+7) SQLite stores the user's recent searches and timestamps.
+8) Flask and Jinja2 dynamically render the recommendations and recent search history.
+
+
+### Database
+
+The application uses SQLite to store recent searches in:
+
+app/search_history.db
+
+The search_history table contains:
+
+id, Searched movie title, Search timestamp
+
+
+### Installation
+
+Clone the repository and install the dependencies:
 
 pip install -r requirements.txt
+Run Locally
 
-# Run the Flask App
+Start the Flask application:
 
 python main.py
 
-# Access the web app
+Then open:
 
-Go to: http://127.0.0.1:5000/search
+http://127.0.0.1:5000/search
+
+The root route redirects to the movie search page.
+
+
+### Deployment
+
+The application is deployed using Gunicorn on Render.
+Try it out here: https://content-similarity-system-wynv.onrender.com
