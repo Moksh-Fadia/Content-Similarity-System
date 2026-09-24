@@ -14,7 +14,7 @@ class MovieRecommender:
         self.model = SentenceTransformer('all-MiniLM-L6-v2')   # loads the pre-trained model to get text embeddings; 
         # SentenceTransformer('...') initializes/loads the model into the memory and makes it ready for encoding 
         self._prepare_data()    # calls its func; prepares the data by cleaning and combining features
-        self._compute_similarity()   # calls its func; computes the embeddings and cosine similarity matrix for all movies
+        self._compute_similarity()   # loads precomputed embeddings or generates them if needed
 
     def _clean_text(self, text):
         text = str(text).lower()
@@ -72,11 +72,6 @@ class MovieRecommender:
 
 # basically all of this to prevent recomputing embeddings every time the server restarts            
 
-        self.cosine_sim = cosine_similarity(self.movie_embeddings)   # precomputes cosine similarity between all pairs of movie embeddings
-# self.cosine_sim[i][j] means: Similarity between movie i and movie j
-# why cosine sim? Because it measures the cosine of the angle between two vectors in a multi-dimensional space, which is a common way to measure similarity between text embeddings; it ranges from -1 (completely dissimilar) to 1 (identical), with 0 indicating no similarity
-# so here, cosine_sim[embedding_i][embedding_j] gives a similarity score between movie i and movie j based on their embeddings
-
         end_time = time.time()   # end timer
         print(f"Startup time: {end_time - start_time:.2f} seconds")    
         print("Embeddings ready")   
@@ -89,7 +84,13 @@ class MovieRecommender:
         if index is None:
             return {"error": "Movie not found."}
         
-        similarity_scores = list(enumerate(self.cosine_sim[index]))  # gets the similarity scores of all movies with respect to the given movie title; eg: [(0, 0.1), (1, 0.2), (2, 0.3)...] where first item is index and second item is similarity score
+# computes cosine similarity between the selected movie and all movie embeddings
+# why cosine sim? Because it measures the cosine of the angle between two vectors in a multi-dimensional space, which is a common way to measure similarity between text embeddings; it ranges from -1 (completely dissimilar) to 1 (identical), with 0 indicating no similarity
+        
+        similarity_scores = list(enumerate(cosine_similarity(
+                                            self.movie_embeddings[index].reshape(1, -1),
+                                            self.movie_embeddings)[0])
+        )  # gets the similarity scores of all movies with respect to the given movie title; eg: [(0, 0.1), (1, 0.2), (2, 0.3)...] where first item is index and second item is similarity score
 
         sorted_scores = sorted(similarity_scores, key=lambda x: x[1], reverse=True)  # sorts movies based on the second item x[1] ie. scores in descending order
 
