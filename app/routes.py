@@ -1,6 +1,6 @@
 # define API endpoints for Flask (here /recommend)
 
-from flask import Blueprint, request, render_template   # Blueprint groups related routes together, request lets us read incoming HTTP request data, render_template renders HTML files from templates folders 
+from flask import Blueprint, request, render_template, redirect   # Blueprint groups related routes together, request lets us read incoming HTTP request data, render_template renders HTML files from templates folders 
 from app.recommender import MovieRecommender   # import the recommender class so that it can be called inside API routes
 from app.db import add_search, get_recent_searches, init_db
 import time
@@ -8,10 +8,15 @@ import time
 # creates a Blueprint named 'routes' to group routes
 bp = Blueprint('routes', __name__, template_folder="templates")  # __name__ tells Flask where this blueprint is defined (ie. current file)
 
-# creates an instance of recommender class once server starts ie. loading csv, preprocessing data, computing similarity matrix (this is done only once)
+# creates one recommender instance when the server starts;
+# loads the movie data, preprocesses it, and loads precomputed embeddings
 recommender = MovieRecommender("data/imdb_movies.csv")
 
 init_db()
+
+@bp.route("/")
+def home():
+    return redirect("/search")
 
 # define/declare the route /search to show HTML form
 @bp.route("/search", methods=["GET"])   # this route will respond only to GET requests; loads the html input page
