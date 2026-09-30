@@ -50,9 +50,6 @@ def recommend_form():
 
         response = render_template("results.html", recommendations=result["recommendations"], title=title, history=history)
 
-        end_time = time.time()   # end timer
-        print(f"Total request time: {end_time - start_time:.4f} sec")
-
         return response
     
     except Exception as e:    # handles unexpected errors
@@ -65,3 +62,32 @@ def recommend_form():
     
 
 
+# this route handles: Natural-language description → recommendations
+@bp.route("/description-search", methods=["POST"])   # this route will respond only to POST requests meaning the user has submitted the form; this route is where the HTML form sends its data
+def description_search():
+    start_time = time.time()
+
+    try:
+        query = request.form.get("query", "").strip()   # reads the "query" field from the submitted form data; remove extra spaces before/after the query
+
+        if not any(char.isalnum() for char in query):   
+            return render_template("results.html", error="Search description must contain letters or numbers", title=query)
+
+        add_search(query)    # adds the search to the sqlite db
+        result = recommender.search_by_description(query, num_recommendations=5)
+
+        if "error" in result:
+            return render_template("results.html", error=result["error"], title=query)
+
+        history = get_recent_searches(limit=5)
+        response = render_template("results.html", recommendations=result["recommendations"], title=query, history=history)
+
+        return response
+
+    except Exception as e:
+        print(e)
+        return render_template("results.html", error="An unexpected error occurred", title=query)
+
+    finally:
+        end_time = time.time()
+        print(f"Total request time: {end_time - start_time:.4f} sec")

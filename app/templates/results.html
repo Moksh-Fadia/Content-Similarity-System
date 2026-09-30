@@ -10,12 +10,14 @@
 </head>
 
 <body>
-    <h1>Recommendations for "{{ title }}"</h1>
+    <h1>Recommendations</h1>
 
     {% if error %}   <!-- syntax for checking if error exists -->
         <p style="color:red">{{ error }}</p>   
   <!--  'error' will be replaced dynamically (displayed) by the error msg in result (ie. result["error"]) (in routes.py) -->
     {% else %}
+    <p>Based on: <strong>{{ title }}</strong></p>
+    
         <ul>
              {% for movie in recommendations %}   <!-- iterating over every movie in recommendations list -->
                 <li>{{ movie }}</li> 

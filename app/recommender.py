@@ -109,3 +109,33 @@ class MovieRecommender:
         
         return {"recommendations": recommendations}     
 # recommendations is a list of the recommended/similar movie titles       
+
+
+# func to search for movies based on a description (overview) instead of a title; useful when the user doesn't know the exact title but knows the plot/description of the movie
+    def search_by_description(self, query, num_recommendations=5):
+        query = self._clean_text(query)
+
+        if not query:
+            return {"error": "Search description cannot be empty."}
+
+        query_embedding = self.model.encode([query])    # converts the query description into an embedding (vector representation) using the same model used for movie embeddings
+
+        similarity_scores = list(enumerate(
+            cosine_similarity(query_embedding, self.movie_embeddings)[0]
+        ))    # computes the similarity scores between the query embedding and all movie embeddings; returns a list of tuples (index, similarity_score); [0] is used to get the first (and only) row of the resulting 2D array from cosine_similarity
+
+        sorted_scores = sorted(similarity_scores, key=lambda x: x[1], reverse=True)   # sorts the similarity scores in descending order based on the similarity score (x[1])
+
+        recommendations = []
+        for i, _ in sorted_scores:
+            genre = str(self.movies.loc[i, 'genre'])
+
+            if any(exclusion in genre.lower() for exclusion in ['animation', 'family', 'children']):
+                continue
+
+            recommendations.append(self.movies.loc[i, 'names'])
+
+            if len(recommendations) >= num_recommendations:
+                break
+
+        return {"recommendations": recommendations}
