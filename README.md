@@ -6,9 +6,25 @@ The system uses movie metadata such as overview, genre, cast, and title to gener
 
 It also stores recent searches using **SQLite** and displays them dynamically on the results page.
 
----
 
-## Features
+### Natural-Language Description Search
+
+The system also supports searching for movies using a natural-language description instead of an exact movie title.
+
+Users can describe the type of movie they are looking for, such as:
+
+`psychological thriller about dreams and reality`
+
+The query is converted into a 384-dimensional embedding using the same `all-MiniLM-L6-v2` SentenceTransformer model used for movie embeddings.
+
+Cosine similarity is then calculated between the query embedding and all stored movie embeddings. The movies with the highest similarity scores are returned as recommendations.
+
+This allows users to discover movies based on the semantic meaning of their description rather than requiring an exact movie title.
+
+The description search uses the same precomputed movie embeddings as the existing recommendation system, so the movie dataset does not need to be re-embedded for each query.
+
+
+### Features
 
 - Search for a movie and receive the top 5 similar recommendations.
 - Semantic similarity using SentenceTransformer embeddings.
@@ -17,10 +33,8 @@ It also stores recent searches using **SQLite** and displays them dynamically on
 - Recent search history stored using SQLite.
 - Dynamic results rendered using Flask and Jinja2.
 - Deployed publicly using Gunicorn and Render.
+- Natural-language movie search using semantic query embeddings.
 
----
-
-## Performance Optimization
 
 ### Persistent Movie Embeddings
 
